@@ -1,0 +1,25 @@
+{
+  "name": "s4_dacs_01_1_solution_deployment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eniotnA57/S4_DACS_01_1_Solution_Deployment.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eniotnA57/S4_DACS_01_1_Solution_Deployment/issues"
+  },
+  "homepage": "https://github.com/eniotnA57/S4_DACS_01_1_Solution_Deployment#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "multer": "^2.0.1"
+  }
+}

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Enregistrement audio</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1 class="title">Enregistrement audio</h1>
+  <button class="big-btn" id="startBtn">Commencer</button>
+
+  <!-- MODALE FORMULAIRE UTILISATEUR -->
+  <div class="modal-bg" id="modalBg">
+    <form class="modal" id="userForm" autocomplete="off">
+      <label for="age">Âge :</label>
+      <input type="number" id="age" name="age" min="18" max="99" required>
+
+      <label for="gender">Genre :</label>
+      <select id="gender" name="gender" required>
+        <option value="">Sélectionner...</option>
+        <option value="Femme">Femme</option>
+        <option value="Homme">Homme</option>
+        <option value="Autre">Autre</option>
+      </select>
+
+      <div class="checkbox-wrap">
+        <input type="checkbox" id="consent" required>
+        <label for="consent">Accepter les conditions</label>
+      </div>
+      <div id="form-error" class="error-message" style="display:none;"></div>
+      <button type="submit" class="modal-btn">Valider</button>
+    </form>
+  </div>
+
+  <!-- ENREGISTREUR AUDIO -->
+  <div id="recorder-screen" style="display:none; position:relative;">
+    <button id="back-home-btn"
+      style="position:absolute; top:15px; right:15px; background:transparent; border:none; font-size:2rem; color:#fff; cursor:pointer;"
+      title="Retour à l'accueil">
+      &times;
+    </button>
+    <div id="phrase-count-zone" style="margin-bottom:30px; display:none; text-align:center;">
+      <label for="phrase-count">Combien de phrases veux-tu enregistrer&nbsp;?</label>
+      <input type="number" id="phrase-count" min="1" max="100" value="5" style="width:60px;">
+      <button id="confirm-count-btn" class="modal-btn">OK</button>
+    </div>
+    <div style="display:flex; justify-content:center;">
+      <button id="start-recording-btn" class="big-btn" style="display:none;">Nouvel enregistrement</button>
+    </div>
+    <div id="phrase-zone" style="margin: 25px 0; font-size: 1.3rem; display:none;"></div>
+    <div id="rec-controls" style="display:none; flex-direction:column; gap:10px;">
+      <div style="display:flex; gap:12px; justify-content:center;">
+        <button id="rec-btn" class="modal-btn">Enregistrer</button>
+        <button id="stop-btn" class="modal-btn" disabled>Arrêter</button>
+        <button id="play-btn" class="modal-btn" disabled>Écouter</button>
+        <button id="redo-btn" class="modal-btn" disabled>Réenregistrer</button>
+      </div>
+      <audio id="audio-preview" controls style="display:none; margin-top:10px;"></audio>
+      <div style="display:flex; gap:12px; justify-content:center; margin-top:12px;">
+        <button id="valider-btn" class="modal-btn" style="display:none; background:green;">Valider et terminer</button>
+        <button id="continuer-btn" class="modal-btn" style="display:none;">Valider et continuer</button>
+        <button id="terminer-btn" class="modal-btn" style="background:#e32626; display:none;">Terminer la session</button>
+      </div>
+    </div>
+  </div>
+  <script src="main.js"></script>
+</body>
+</html>

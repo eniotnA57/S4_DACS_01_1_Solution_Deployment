@@ -1,4 +1,3 @@
-// 1. CHARGEMENT DES PHRASES
 let ALL_PHRASES = [];
 fetch('sentences.txt')
   .then(res => res.text())
@@ -31,7 +30,6 @@ const continuerBtn = document.getElementById('continuer-btn');
 const terminerBtn = document.getElementById('terminer-btn');
 const audioPreview = document.getElementById('audio-preview');
 
-// UX pour le consentement
 startBtn.onclick = () => {
   modalBg.classList.add('show');
   errorDiv.style.display = "none";
@@ -40,15 +38,13 @@ consentCheckbox.onchange = () => {
   if (consentCheckbox.checked) errorDiv.style.display = "none";
 };
 
-// Données utilisateur
 let userInfos = {};
 
-// Pour la session
 let phraseCount = 1;
 let sessionPhrases = [];
 let currentIndex = 0;
 
-// FORMULAIRE UTILISATEUR
+
 userForm.onsubmit = e => {
   e.preventDefault();
   const age = document.getElementById('age').value;
@@ -67,7 +63,7 @@ userForm.onsubmit = e => {
   phraseCountZone.style.display = "block";
 };
 
-// SÉLECTION DU NOMBRE DE PHRASES
+
 confirmCountBtn.onclick = () => {
   phraseCount = parseInt(document.getElementById('phrase-count').value, 10);
   if (isNaN(phraseCount) || phraseCount < 1 || phraseCount > ALL_PHRASES.length) {
@@ -101,18 +97,17 @@ function showValidateButtons() {
   terminerBtn.style.display = "inline-block";
 }
 
-// VARIABLES D’ENREGISTREMENT
+
 let recorder, audioChunks = [], audioBlob;
 let selectedPhrase = "";
 
-// 2. DÉMARRER L’ENREGISTREMENT
+
 recBtn.onclick = async () => {
   if (!navigator.mediaDevices) {
     alert("Ce navigateur ne supporte pas l'enregistrement audio.");
     return;
   }
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  // MimeType explicite pour compatibilité
   const options = { mimeType: 'audio/webm;codecs=opus' };
   recorder = new MediaRecorder(stream, options);
   audioChunks = [];
@@ -140,25 +135,22 @@ recBtn.onclick = async () => {
   redoBtn.disabled = true;
 };
 
-// 3. ARRÊTER L’ENREGISTREMENT
 stopBtn.onclick = () => {
   recorder.stop();
   recBtn.disabled = false;
   stopBtn.disabled = true;
 };
 
-// 4. JOUER L’AUDIO
 playBtn.onclick = () => {
   audioPreview.pause();
   audioPreview.currentTime = 0;
   audioPreview.src = URL.createObjectURL(audioBlob);
-  audioPreview.load();  // force le rechargement
+  audioPreview.load();  
   audioPreview.play().catch(err => {
     alert("Impossible de jouer l'audio : " + err.message);
   });
 };
 
-// 5. RÉENREGISTRER
 redoBtn.onclick = () => {
   audioBlob = null;
   audioPreview.style.display = "none";
@@ -170,7 +162,6 @@ redoBtn.onclick = () => {
   continuerBtn.disabled = true;
 };
 
-// VALIDATION & PROGRESSION
 saveBtn.onclick = async () => {
   if (!audioBlob) return alert("Aucun enregistrement à envoyer !");
   await sendAudio();
@@ -190,7 +181,6 @@ continuerBtn.onclick = async () => {
   }
 };
 
-// PRÉPARER L’ÉTAPE SUIVANTE
 function prepareNextRecording() {
   selectedPhrase = sessionPhrases[currentIndex];
   phraseZone.textContent = `Phrase ${currentIndex + 1} / ${sessionPhrases.length} : « ${selectedPhrase} »`;
@@ -209,14 +199,12 @@ function prepareNextRecording() {
   showValidateButtons();
 }
 
-// TERMINER EN COURS
 terminerBtn.onclick = () => {
   if (confirm("Terminer la session ? Les enregistrements non faits ne seront pas sauvegardés.")) {
     resetSession();
   }
 };
 
-// ENVOI AU BACKEND
 async function sendAudio() {
   const formData = new FormData();
   formData.append("audio", audioBlob, "recording.webm");
@@ -235,7 +223,6 @@ async function sendAudio() {
   }
 }
 
-// REINITIALISER L’INTERFACE
 backHomeBtn.onclick = resetSession;
 function resetSession() {
   recorderScreen.style.display = "none";

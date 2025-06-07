@@ -1,28 +1,48 @@
-version: "3"
+version: "3.8"
+
 services:
   backend:
     build: ./backend
-    ports:
-      - "3001:3001"
     volumes:
-      - ./backend/uploads:/app/uploads
+      - uploads:/app/uploads
     environment:
-      - MONGO_URL=mongodb://mongo:27017/audiodb
+      MONGO_URL: mongodb://mongo:27017/audiodb
+      NODE_ENV: production
     depends_on:
       - mongo
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   mongo:
     image: mongo:6
     restart: unless-stopped
-    ports:
-      - "27017:27017"
     volumes:
-      - ./data/mongodb:/data/db
+      - mongodb:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     image: nginx:alpine
-    volumes:
-      - ./frontend:/usr/share/nginx/html:ro
     ports:
       - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  uploads:
+  mongodb:

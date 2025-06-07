@@ -89,17 +89,23 @@ body {
   min-height: 18px;
 }
 
+#recorder-screen {
+  position: relative;
+}
+
 #back-home-btn {
-  color: #fff;
+  position: fixed;
+  top: 16px;
+  right: 16px;
   background: transparent;
   border: none;
-  font-size: 2.3rem;
+  font-size: 2rem;
+  color: #fff;
   cursor: pointer;
-  position: absolute;
-  top: 15px; right: 15px;
+  z-index: 9999;
   transition: color 0.2s, transform 0.15s;
-  z-index: 2;
 }
+
 #back-home-btn:hover {
   color: #e06262;
   transform: scale(1.18);

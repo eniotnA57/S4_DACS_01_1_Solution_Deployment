@@ -1,12 +1,13 @@
 // 1. CHARGEMENT DES PHRASES
 let ALL_PHRASES = [];
-fetch('sentences.txt') // ← ou phrases.txt selon ton fichier
+fetch('sentences.txt')
   .then(res => res.text())
   .then(text => {
     ALL_PHRASES = text.split('\n').map(l => l.trim()).filter(l => l);
     document.getElementById('phrase-count').max = ALL_PHRASES.length;
     document.getElementById('phrase-count').value = Math.min(5, ALL_PHRASES.length);
-  });
+  })
+  .catch(err => console.error('Erreur chargement phrases:', err));
 
 const startBtn = document.getElementById('startBtn');
 const modalBg = document.getElementById('modalBg');
@@ -18,7 +19,6 @@ const backHomeBtn = document.getElementById('back-home-btn');
 const phraseCountZone = document.getElementById('phrase-count-zone');
 const confirmCountBtn = document.getElementById('confirm-count-btn');
 
-// Boutons d'action
 const startRecBtn = document.getElementById('start-recording-btn');
 const phraseZone = document.getElementById('phrase-zone');
 const recControls = document.getElementById('rec-controls');
@@ -31,7 +31,7 @@ const continuerBtn = document.getElementById('continuer-btn');
 const terminerBtn = document.getElementById('terminer-btn');
 const audioPreview = document.getElementById('audio-preview');
 
-// Consentement UX
+// UX pour le consentement
 startBtn.onclick = () => {
   modalBg.classList.add('show');
   errorDiv.style.display = "none";
@@ -40,7 +40,7 @@ consentCheckbox.onchange = () => {
   if (consentCheckbox.checked) errorDiv.style.display = "none";
 };
 
-// Infos utilisateur mémorisées
+// Données utilisateur
 let userInfos = {};
 
 // Pour la session
@@ -48,8 +48,8 @@ let phraseCount = 1;
 let sessionPhrases = [];
 let currentIndex = 0;
 
-// --- FORMULAIRE UTILISATEUR ---
-userForm.onsubmit = (e) => {
+// FORMULAIRE UTILISATEUR
+userForm.onsubmit = e => {
   e.preventDefault();
   const age = document.getElementById('age').value;
   const gender = document.getElementById('gender').value;
@@ -59,78 +59,70 @@ userForm.onsubmit = (e) => {
     errorDiv.style.display = "block";
     return;
   }
-  errorDiv.style.display = "none";
   userInfos = { age, gender, consent };
-
+  errorDiv.style.display = "none";
   modalBg.classList.remove('show');
   startBtn.style.display = "none";
   recorderScreen.style.display = "flex";
-  recorderScreen.style.flexDirection = "column";
-  recorderScreen.style.alignItems = "center";
   phraseCountZone.style.display = "block";
-  startRecBtn.style.display = "none";
-  phraseZone.style.display = "none";
-  recControls.style.display = "none";
 };
 
-// --- NOMBRE DE PHRASES ---
+// SÉLECTION DU NOMBRE DE PHRASES
 confirmCountBtn.onclick = () => {
   phraseCount = parseInt(document.getElementById('phrase-count').value, 10);
   if (isNaN(phraseCount) || phraseCount < 1 || phraseCount > ALL_PHRASES.length) {
     alert(`Merci de choisir un nombre entre 1 et ${ALL_PHRASES.length}`);
     return;
   }
-  // Mélange et sélectionne les phrases pour la session, sans doublons
-  sessionPhrases = ALL_PHRASES.slice().sort(() => Math.random() - 0.5).slice(0, phraseCount);
-  currentIndex = 0;
+  sessionPhrases = ALL_PHRASES
+    .slice()
+    .sort(() => Math.random() - 0.5)
+    .slice(0, phraseCount);
   phraseCountZone.style.display = "none";
   startRecBtn.style.display = "inline-block";
+  currentIndex = 0;
 };
-
-
-let recorder, audioChunks = [], audioBlob;
-let selectedPhrase = "";
 
 startRecBtn.onclick = prepareNextRecording;
 
-
 function showValidateButtons() {
-  // D'abord, tout cacher
   saveBtn.style.display = "none";
   continuerBtn.style.display = "none";
   terminerBtn.style.display = "none";
 
-  if (sessionPhrases.length === 1) {
-    // 1 phrase
+  const isLast = currentIndex === sessionPhrases.length - 1;
+  if (sessionPhrases.length === 1 || isLast) {
     saveBtn.textContent = "Valider et terminer";
     saveBtn.style.display = "inline-block";
-    terminerBtn.style.display = "inline-block";
   } else {
-    // Plusieurs phrases
-    if (currentIndex < sessionPhrases.length - 1) {
-      continuerBtn.textContent = "Valider et continuer";
-      continuerBtn.style.display = "inline-block";
-      terminerBtn.style.display = "inline-block";
-    } else {
-      saveBtn.textContent = "Valider et terminer";
-      saveBtn.style.display = "inline-block";
-      terminerBtn.style.display = "inline-block";
-    }
+    continuerBtn.textContent = "Valider et continuer";
+    continuerBtn.style.display = "inline-block";
   }
+  terminerBtn.style.display = "inline-block";
 }
 
-// 2. Démarrer enregistrement
+// VARIABLES D’ENREGISTREMENT
+let recorder, audioChunks = [], audioBlob;
+let selectedPhrase = "";
+
+// 2. DÉMARRER L’ENREGISTREMENT
 recBtn.onclick = async () => {
   if (!navigator.mediaDevices) {
     alert("Ce navigateur ne supporte pas l'enregistrement audio.");
     return;
   }
-  let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  recorder = new MediaRecorder(stream);
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  // MimeType explicite pour compatibilité
+  const options = { mimeType: 'audio/webm;codecs=opus' };
+  recorder = new MediaRecorder(stream, options);
   audioChunks = [];
-  recorder.ondataavailable = e => audioChunks.push(e.data);
+  recorder.ondataavailable = e => {
+    if (e.data && e.data.size > 0) audioChunks.push(e.data);
+  };
   recorder.onstop = () => {
-    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+    audioBlob = new Blob(audioChunks, { type: recorder.mimeType });
+    console.log('➡️ chunks enregistrés :', audioChunks.length);
+    console.log('➡️ taille du Blob :', audioBlob.size, 'octets');
     audioPreview.src = URL.createObjectURL(audioBlob);
     audioPreview.style.display = "block";
     playBtn.disabled = false;
@@ -146,34 +138,29 @@ recBtn.onclick = async () => {
   stopBtn.disabled = false;
   playBtn.disabled = true;
   redoBtn.disabled = true;
-  saveBtn.disabled = true;
-  continuerBtn.disabled = true;
 };
 
-// 3. Arrêter l’enregistrement
+// 3. ARRÊTER L’ENREGISTREMENT
 stopBtn.onclick = () => {
   recorder.stop();
   recBtn.disabled = false;
   stopBtn.disabled = true;
 };
 
-// 4. Réécouter
+// 4. JOUER L’AUDIO
 playBtn.onclick = () => {
-  // Pour éviter les bugs de lecture consécutive
   audioPreview.pause();
   audioPreview.currentTime = 0;
-  // Recharge la source, important si on a réenregistré
   audioPreview.src = URL.createObjectURL(audioBlob);
+  audioPreview.load();  // force le rechargement
   audioPreview.play().catch(err => {
     alert("Impossible de jouer l'audio : " + err.message);
   });
 };
 
-
-// 5. Réenregistrer
+// 5. RÉENREGISTRER
 redoBtn.onclick = () => {
   audioBlob = null;
-  audioPreview.src = "";
   audioPreview.style.display = "none";
   recBtn.disabled = false;
   stopBtn.disabled = true;
@@ -183,25 +170,16 @@ redoBtn.onclick = () => {
   continuerBtn.disabled = true;
 };
 
-// ----------- Validation / progression ----------- //
-
-// Valider et terminer
+// VALIDATION & PROGRESSION
 saveBtn.onclick = async () => {
-  if (!audioBlob) {
-    alert("Aucun enregistrement à envoyer !");
-    return;
-  }
+  if (!audioBlob) return alert("Aucun enregistrement à envoyer !");
   await sendAudio();
   alert("Session terminée ! Merci !");
   resetSession();
 };
 
-// Valider et continuer
 continuerBtn.onclick = async () => {
-  if (!audioBlob) {
-    alert("Aucun enregistrement à envoyer !");
-    return;
-  }
+  if (!audioBlob) return alert("Aucun enregistrement à envoyer !");
   await sendAudio();
   currentIndex++;
   if (currentIndex < sessionPhrases.length) {
@@ -212,13 +190,14 @@ continuerBtn.onclick = async () => {
   }
 };
 
+// PRÉPARER L’ÉTAPE SUIVANTE
 function prepareNextRecording() {
   selectedPhrase = sessionPhrases[currentIndex];
-  phraseZone.textContent = `Phrase ${currentIndex+1} / ${sessionPhrases.length} : « ${selectedPhrase} »`;
+  phraseZone.textContent = `Phrase ${currentIndex + 1} / ${sessionPhrases.length} : « ${selectedPhrase} »`;
   phraseZone.style.display = "block";
   recControls.style.display = "flex";
   startRecBtn.style.display = "none";
-  // Remise à zéro des états boutons et de l’audio
+
   recBtn.disabled = false;
   stopBtn.disabled = true;
   playBtn.disabled = true;
@@ -227,21 +206,17 @@ function prepareNextRecording() {
   continuerBtn.disabled = true;
   terminerBtn.disabled = false;
   audioPreview.style.display = "none";
-  audioPreview.src = "";
-  audioBlob = null;
   showValidateButtons();
 }
 
-
-
-// Terminer la session en cours de route
+// TERMINER EN COURS
 terminerBtn.onclick = () => {
   if (confirm("Terminer la session ? Les enregistrements non faits ne seront pas sauvegardés.")) {
     resetSession();
   }
 };
 
-// Envoi au backend
+// ENVOI AU BACKEND
 async function sendAudio() {
   const formData = new FormData();
   formData.append("audio", audioBlob, "recording.webm");
@@ -250,17 +225,18 @@ async function sendAudio() {
   formData.append("consent", userInfos.consent);
   formData.append("sentence", selectedPhrase);
 
-  await fetch("http://localhost:3001/api/upload", {
-    method: "POST",
-    body: formData
-  });
+  try {
+    await fetch("http://localhost:3001/api/upload", {
+      method: "POST",
+      body: formData
+    });
+  } catch (err) {
+    console.error('Erreur envoi audio:', err);
+  }
 }
 
-// Retour accueil (croix)
-backHomeBtn.onclick = () => {
-  resetSession();
-};
-
+// REINITIALISER L’INTERFACE
+backHomeBtn.onclick = resetSession;
 function resetSession() {
   recorderScreen.style.display = "none";
   startBtn.style.display = "inline-block";
